@@ -16,7 +16,7 @@ sed -i \
 ### Add preferred system Flatpaks
 echo "Adding preferred applications to system-flatpaks.Brewfile:"
 tee -a /usr/share/ublue-os/homebrew/system-flatpaks.Brewfile \
-    < /ctx/build_files/system-flatpaks.Brewfile
+    < /ctx/system-flatpaks.Brewfile
 
 echo "========== Flatpak first-boot preinstall declarations =========="
 cat /usr/share/flatpak/preinstall.d/90-local-apps.preinstall
