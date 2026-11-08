@@ -13,7 +13,29 @@ cp -avf "/ctx/system_files"/. /
 # https://mirrors.rpmfusion.org/mirrorlist?path=free/fedora/updates/43/x86_64/repoview/index.html&protocol=https&redirect=1
 
 # this installs a package from fedora repos
-dnf5 install -y tmux
+# dnf5 install -y tmux
+
+### Install Iosevka fonts
+
+# Enable Iosevka COPR
+dnf5 -y copr enable bb010g/iosevka
+
+# Enable Nerd Fonts COPR
+dnf5 -y copr enable aquacash5/nerd-fonts
+
+# Install all four font variants
+dnf5 install -y \
+    iosevka-fonts \
+    iosevka-term-fonts \
+    iosevka-nerd-fonts \
+    iosevka-term-nerd-fonts
+
+# Rebuild font cache
+fc-cache -f -v
+
+# Disable COPR repositories in the final image
+dnf5 -y copr disable bb010g/iosevka
+dnf5 -y copr disable aquacash5/nerd-fonts
 
 # Use a COPR Example:
 #
