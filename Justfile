@@ -174,6 +174,20 @@ ostree-rechunk $target_image=image_name $tag=default_tag:
     RPM_OSTREE_CHUNKER_IMAGE="localhost/${target_image}:${tag}"
 
     GRAPHROOT="$(podman info --format '{{ '{{.Store.GraphRoot}}' }}')"
+    IMAGE_LABEL_ARGS=()
+    while IFS= read -r label; do
+      IMAGE_LABEL_ARGS+=(--label "$label")
+    done < <(
+      podman inspect "${target_image}:${tag}" |
+        jq -r '.[0].Config.Labels // {}
+          | to_entries[]
+          | select(
+              .key != "containers.bootc" and
+              .key != "ostree.commit" and
+              .key != "ostree.final-diffid"
+            )
+          | "\(.key)=\(.value)"'
+    )
 
     podman run --rm --pull=never --privileged \
       --mount=type=image,src="${target_image}:${tag}",target=/rpm-ostree \
@@ -182,6 +196,7 @@ ostree-rechunk $target_image=image_name $tag=default_tag:
       --entrypoint /usr/bin/rpm-ostree \
       "${RPM_OSTREE_CHUNKER_IMAGE}" \
       compose build-chunked-oci \
+      "${IMAGE_LABEL_ARGS[@]}" \
       --max-layers 127 \
       --format-version=2 \
       --bootc \
