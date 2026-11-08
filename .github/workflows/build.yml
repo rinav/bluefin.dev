@@ -56,9 +56,18 @@ jobs:
       - name: Default Tag
         id: gen-default-tag
         run: |
-          DEFAULT_TAG=$(just generate-default-tag)
+          UPSTREAM_VERSION="$(skopeo inspect docker://ghcr.io/ublue-os/bluefin:stable | jq -r '.Labels["org.opencontainers.image.version"]')"
 
-          echo "DEFAULT_TAG=${DEFAULT_TAG}" >> $GITHUB_ENV
+          if [[ -z "${UPSTREAM_VERSION}" || "${UPSTREAM_VERSION}" == "null" ]]; then
+            echo "Could not read upstream Bluefin version" >&2
+            exit 1
+          fi
+
+          DEFAULT_TAG="${UPSTREAM_VERSION}.dev-${GITHUB_SHA:0:7}"
+
+          echo "Upstream Bluefin version: ${UPSTREAM_VERSION}"
+          echo "Custom image version: ${DEFAULT_TAG}"
+          echo "DEFAULT_TAG=${DEFAULT_TAG}" >> "$GITHUB_ENV"
 
       - name: Prepare environment
         run: |

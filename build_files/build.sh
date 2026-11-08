@@ -14,22 +14,13 @@ sed -i \
     /usr/share/ublue-os/homebrew/system-flatpaks.Brewfile
 
 ### Add preferred system Flatpaks
+echo "Adding preferred applications to system-flatpaks.Brewfile:"
+tee -a /usr/share/ublue-os/homebrew/system-flatpaks.Brewfile \
+    < /ctx/build_files/system-flatpaks.Brewfile
 
-cat >> /usr/share/ublue-os/homebrew/system-flatpaks.Brewfile <<'EOF'
-# Productivity
-flatpak "com.bitwarden.desktop"
-flatpak "io.ente.auth"
-flatpak "com.zoho.Notebook"
-flatpak "net.donnybeelo.Convey"
-
-# Browsers
-flatpak "org.gnome.Epiphany"
-flatpak "app.zen_browser.zen"
-flatpak "com.ulaa.Ulaa"
-
-# Media
-flatpak "com.spotify.Client"
-EOF
+echo "========== Flatpak first-boot preinstall declarations =========="
+cat /usr/share/flatpak/preinstall.d/90-local-apps.preinstall
+echo "========== Flatpak configuration complete =========="
 
 ### Install packages
 
