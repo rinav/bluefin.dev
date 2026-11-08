@@ -5,6 +5,32 @@ set -ouex pipefail
 # Copy the contents of system_files/ of the git repo to /
 cp -avf "/ctx/system_files"/. /
 
+### Customize Bluefin system Flatpaks
+
+sed -i \
+    -e '/^flatpak "it.mijorus.smile"$/d' \
+    -e '/^flatpak "io.gitlab.adhami3310.Impression"$/d' \
+    -e '/^flatpak "org.gnome.SimpleScan"$/d' \
+    /usr/share/ublue-os/homebrew/system-flatpaks.Brewfile
+
+### Add preferred system Flatpaks
+
+cat >> /usr/share/ublue-os/homebrew/system-flatpaks.Brewfile <<'EOF'
+# Productivity
+flatpak "com.bitwarden.desktop"
+flatpak "io.ente.auth"
+flatpak "com.zoho.Notebook"
+flatpak "net.donnybeelo.Convey"
+
+# Browsers
+flatpak "org.gnome.Epiphany"
+flatpak "app.zen_browser.zen"
+flatpak "com.ulaa.Ulaa"
+
+# Media
+flatpak "com.spotify.Client"
+EOF
+
 ### Install packages
 
 # Packages can be installed from any enabled yum repo on the image.
@@ -23,6 +49,19 @@ dnf5 -y copr enable bb010g/iosevka
 # Enable Nerd Fonts COPR
 dnf5 -y copr enable aquacash5/nerd-fonts
 
+# Enable Niri official COPR
+dnf5 -y copr enable yalter/niri
+
+# Enable Dux official COPR
+dnf5 -y copr enable duxlabs/dux-repo
+dnf5 -y copr enable duxlabs/dms
+
+# Prevent Dux repositories from supplying Niri
+dnf5 config-manager setopt \
+    'copr:copr.fedorainfracloud.org:duxlabs:dms.excludepkgs=niri' \
+    'copr:copr.fedorainfracloud.org:duxlabs:dux-repo.excludepkgs=niri' \
+    'coprdep:copr.fedorainfracloud.org:duxlabs:dux-repo.excludepkgs=niri'
+
 # Install all four font variants
 dnf5 install -y \
     iosevka-fonts \
@@ -30,12 +69,31 @@ dnf5 install -y \
     iosevka-nerd-fonts \
     iosevka-term-nerd-fonts
 
+# Install desktop stack and applications
+dnf5 install -y \
+    --setopt=install_weak_deps=True \
+    niri \
+    quickshell \
+    dms \
+    noctalia \
+    dux-gop \
+    dux-search \
+    dux-calendar \
+    dux-files \
+    ghostty \
+    alacritty \
+    gtk4-layer-shell
+
 # Rebuild font cache
 fc-cache -f -v
 
 # Disable COPR repositories in the final image
 dnf5 -y copr disable bb010g/iosevka
 dnf5 -y copr disable aquacash5/nerd-fonts
+
+dnf5 -y copr disable yalter/niri
+dnf5 -y copr disable duxlabs/dux-repo
+dnf5 -y copr disable duxlabs/dms
 
 # Use a COPR Example:
 #

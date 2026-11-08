@@ -1,0 +1,23 @@
+[Flatpak Preinstall com.bitwarden.desktop]
+Branch=stable
+
+[Flatpak Preinstall io.ente.auth]
+Branch=stable
+
+[Flatpak Preinstall com.zoho.Notebook]
+Branch=stable
+
+[Flatpak Preinstall net.donnybeelo.Convey]
+Branch=stable
+
+[Flatpak Preinstall org.gnome.Epiphany]
+Branch=stable
+
+[Flatpak Preinstall app.zen_browser.zen]
+Branch=stable
+
+[Flatpak Preinstall com.ulaa.Ulaa]
+Branch=stable
+
+[Flatpak Preinstall com.spotify.Client]
+Branch=stable
