@@ -1,0 +1,17 @@
+groups:
+  fonts:
+    enabled: true
+    repositories:
+      - name: bb010g/iosevka
+      - name: aquacash5/nerd-fonts
+
+  desktop:
+    enabled: true
+    repositories:
+      - name: yalter/niri
+      - name: duxlabs/dux-repo
+        exclude:
+          - niri
+      - name: duxlabs/dms
+        exclude:
+          - niri

@@ -11,3 +11,6 @@ flatpak "com.ulaa.Ulaa"
 
 # Media
 flatpak "com.spotify.Client"
+
+# Development
+flatpak "org.desktop_plus.desktop-plus"

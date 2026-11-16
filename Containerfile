@@ -1,6 +1,14 @@
-# Allow build scripts to be referenced without being copied into the final image
+# Build-time YAML parser
+FROM docker.io/mikefarah/yq:4.54.1 AS yq
+
+# Build context
 FROM scratch AS ctx
-COPY build_files /
+COPY --from=yq /usr/bin/yq /ctx/yq
+
+COPY custom/upstream/build_files/build.sh /ctx/build.sh
+COPY custom/scripts /ctx/scripts
+COPY build_files/system-flatpaks.Brewfile /ctx/system-flatpaks.Brewfile
+COPY custom/config /ctx/config
 COPY system_files /system_files
 
 # Base Image
