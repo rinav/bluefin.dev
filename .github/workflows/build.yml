@@ -46,12 +46,14 @@ jobs:
         run: |
           just check
 
-      - name: Image Name
-        id: image-name
+      - name: Image Names
+        id: image-names
         run: |
           IMAGE_NAME=$(just image_name)
+          DX_IMAGE_NAME="${IMAGE_NAME}-dx"
 
-          echo "IMAGE_NAME=${IMAGE_NAME}" >> $GITHUB_ENV
+          echo "IMAGE_NAME=${IMAGE_NAME}" >> "$GITHUB_ENV"
+          echo "DX_IMAGE_NAME=${DX_IMAGE_NAME}" >> "$GITHUB_ENV"
 
       - name: Default Tag
         id: gen-default-tag
@@ -72,24 +74,23 @@ jobs:
       - name: Prepare environment
         run: |
           # Lowercase the image uri https://github.com/macbre/push-to-ghcr/issues/12
-          echo "IMAGE_REGISTRY=${IMAGE_REGISTRY,,}" >> ${GITHUB_ENV}
-          echo "IMAGE_NAME=${IMAGE_NAME,,}" >> ${GITHUB_ENV}
+          echo "IMAGE_REGISTRY=${IMAGE_REGISTRY,,}" >> "$GITHUB_ENV"
+          echo "IMAGE_NAME=${IMAGE_NAME,,}" >> "$GITHUB_ENV"
+          echo "DX_IMAGE_NAME=${DX_IMAGE_NAME,,}" >> "$GITHUB_ENV"
 
       # This actually builds the container image
-      - name: Build Image
-        id: build-image
+      - name: Build Images
+        id: build-images
         run: |
-          just build \
-            ${IMAGE_NAME} \
-            ${DEFAULT_TAG}
+          just build "${IMAGE_NAME}" "${DEFAULT_TAG}" true
+          just build "${DX_IMAGE_NAME}" "${DEFAULT_TAG}" true
 
       # This is optional, this provides smaller delta updates
-      - name: Rechunk with rpm-ostree
-        id: rechunk
+      - name: Rechunk Images
+        id: rechunk-images
         run: |
-          just ostree-rechunk \
-            ${IMAGE_NAME} \
-            ${DEFAULT_TAG}
+          just ostree-rechunk "${IMAGE_NAME}" "${DEFAULT_TAG}"
+          just ostree-rechunk "${DX_IMAGE_NAME}" "${DEFAULT_TAG}"
 
       # If you are feeling adventurous, use the new distro agnostic rechunker
       # https://github.com/coreos/chunkah
@@ -112,13 +113,18 @@ jobs:
           echo "${alias_tags}"
           echo "alias_tags=${alias_tags}" >> $GITHUB_OUTPUT
 
-      - name: Tag Image
+      - name: Tag Images
         id: tag-images
         env:
           ALIAS_TAGS: ${{ steps.gen-build-tags.outputs.alias_tags }}
         run: |
           just tag-images \
             "${IMAGE_NAME}" \
+            "${DEFAULT_TAG}" \
+            "${ALIAS_TAGS}"
+
+          just tag-images \
+            "${DX_IMAGE_NAME}" \
             "${DEFAULT_TAG}" \
             "${ALIAS_TAGS}"
 
@@ -132,20 +138,29 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Push To GHCR
+      - name: Push Images To GHCR
         if: github.event_name != 'pull_request' && github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
-        id: push-image
+        id: push-images
         env:
           ALIAS_TAGS: ${{ steps.gen-build-tags.outputs.alias_tags }}
         run: |
           set -euox pipefail
-          for tag in ${ALIAS_TAGS}; do
-            podman push --digestfile=/tmp/digestfile ${IMAGE_NAME}:${tag} ${IMAGE_REGISTRY}/${IMAGE_NAME}:${tag}
+
+          for image in "${IMAGE_NAME}" "${DX_IMAGE_NAME}"; do
+            for tag in ${ALIAS_TAGS}; do
+              podman push \
+                --digestfile="/tmp/${image}-${tag}-digest" \
+                "${image}:${tag}" \
+                "${IMAGE_REGISTRY}/${image}:${tag}"
+            done
+
+            digest=$(< "/tmp/${image}-${DEFAULT_TAG}-digest")
+            if [[ "${image}" == "${IMAGE_NAME}" ]]; then
+              echo "stable_digest=${digest}" >> "$GITHUB_OUTPUT"
+            else
+              echo "dx_digest=${digest}" >> "$GITHUB_OUTPUT"
+            fi
           done
-
-          digest=$(< /tmp/digestfile)
-
-          echo "digest=${digest}" >> $GITHUB_OUTPUT
 
       # This section is optional and only needs to be enabled if you plan on distributing
       # your project for others to consume. You will need to create a public and private key
@@ -158,16 +173,17 @@ jobs:
           # be careful when upgrading major versions
           cosign-release: 'v3.1.4'
 
-      - name: Sign container image
-        id: sign-image
+      - name: Sign Images
+        id: sign-images
         if: github.event_name != 'pull_request' && github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
         env:
           COSIGN_EXPERIMENTAL: false
           COSIGN_PRIVATE_KEY: ${{ secrets.SIGNING_SECRET }}
-          DIGEST: ${{ steps.push-image.outputs.digest }}
+          STABLE_DIGEST: ${{ steps.push-images.outputs.stable_digest }}
+          DX_DIGEST: ${{ steps.push-images.outputs.dx_digest }}
         run: |
           # https://github.com/containers/container-libs/issues/388
           # https://github.com/coreos/rpm-ostree/issues/5509
           # use old bundle format, so we can use newer cosign 3.X.X instead of 2.X.X
-          cosign sign -y --new-bundle-format=false --use-signing-config=false --key env://COSIGN_PRIVATE_KEY ${IMAGE_REGISTRY}/${IMAGE_NAME}@${DIGEST}
-
+          cosign sign -y --new-bundle-format=false --use-signing-config=false --key env://COSIGN_PRIVATE_KEY "${IMAGE_REGISTRY}/${IMAGE_NAME}@${STABLE_DIGEST}"
+          cosign sign -y --new-bundle-format=false --use-signing-config=false --key env://COSIGN_PRIVATE_KEY "${IMAGE_REGISTRY}/${DX_IMAGE_NAME}@${DX_DIGEST}"
