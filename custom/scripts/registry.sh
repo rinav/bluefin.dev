@@ -6,7 +6,7 @@ QUERY_DIR="/ctx/scripts/queries"
 
 # Read an enabled registry group using its dedicated TOML query.
 read_registry() {
-  local registry="$1"
+  local registry="${1:-}"
   local group="${2:-}"
 
   [[ -n "$registry" ]] || {
@@ -36,7 +36,7 @@ read_registry() {
 
 # List enabled groups in a registry.
 list_registry_groups() {
-  local registry="$1"
+  local registry="${1:-}"
 
   [[ -n "$registry" ]] || {
     echo "Error: registry name is required" >&2
