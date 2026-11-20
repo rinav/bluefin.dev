@@ -1,0 +1,24 @@
+[groups.fonts]
+enabled = true
+
+[[groups.fonts.repositories]]
+name = "bb010g/iosevka"
+
+[[groups.fonts.repositories]]
+name = "aquacash5/nerd-fonts"
+
+
+[groups.desktop]
+enabled = true
+
+[[groups.desktop.repositories]]
+name = "yalter/niri"
+
+[[groups.desktop.repositories]]
+name = "duxlabs/dux-repo"
+exclude = ["niri"]
+exclude_dependencies = true
+
+[[groups.desktop.repositories]]
+name = "duxlabs/dms"
+exclude = ["niri"]

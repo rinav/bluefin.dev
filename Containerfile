@@ -1,15 +1,15 @@
-# Build-time YAML parser
+# Build-time configuration parser
 FROM docker.io/mikefarah/yq:4.54.1 AS yq
 
 # Build context
 FROM scratch AS ctx
-COPY --from=yq /usr/bin/yq /ctx/yq
+COPY --from=yq /usr/bin/yq /yq
 
-COPY custom/upstream/build_files/build.sh /ctx/build.sh
-COPY custom/scripts /ctx/scripts
-COPY build_files/system-flatpaks.Brewfile /ctx/system-flatpaks.Brewfile
-COPY custom/config /ctx/config
+COPY custom/upstream/build_files/build.sh /build.sh
+COPY custom/scripts /scripts
+COPY custom/config /config
 COPY system_files /system_files
+
 
 # Base Image
 # FROM ghcr.io/ublue-os/bazzite:stable

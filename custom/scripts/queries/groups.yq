@@ -1,0 +1,4 @@
+.groups
+| to_entries[]
+| select(.value.enabled == true)
+| .key

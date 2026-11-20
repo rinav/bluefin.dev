@@ -1,0 +1,10 @@
+.groups
+| to_entries[]
+| select(.value.enabled == true)
+| select(strenv(REGISTRY_GROUP) == "" or .key == strenv(REGISTRY_GROUP))
+| .value.repositories[]
+| [
+    .name,
+    (if ((.exclude // []) | length) > 0 then (.exclude | join(",")) else "-" end),
+    (.exclude_dependencies // false)
+  ]
