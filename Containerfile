@@ -1,3 +1,5 @@
+ARG BASE_IMAGE=ghcr.io/ublue-os/bluefin:stable
+
 # Build-time configuration parser
 FROM docker.io/mikefarah/yq:4.54.1 AS yq
 
@@ -13,7 +15,7 @@ COPY custom/system_files /system_files
 
 # Base Image
 # FROM ghcr.io/ublue-os/bazzite:stable
-FROM ghcr.io/ublue-os/bluefin:stable
+# FROM ghcr.io/ublue-os/bluefin:stable
 ## Other possible base images include:
 # FROM ghcr.io/ublue-os/bazzite:testing
 # FROM ghcr.io/ublue-os/aurora:stable
@@ -23,6 +25,8 @@ FROM ghcr.io/ublue-os/bluefin:stable
 # Universal Blue Images: https://github.com/orgs/ublue-os/packages
 # Fedora base image: quay.io/fedora/fedora-bootc:44
 # CentOS base images: quay.io/centos-bootc/centos-bootc:stream10
+
+FROM ${BASE_IMAGE}
 
 ### [IM]MUTABLE /opt
 ## Some bootable images, like Fedora, have /opt symlinked to /var/opt, in order to

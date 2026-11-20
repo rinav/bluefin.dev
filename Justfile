@@ -93,13 +93,28 @@ sudoif command *args:
 #
 
 # Build the image using the specified parameters
-build $target_image=image_name $tag=default_tag:
+build $target_image=image_name $tag=default_tag $nvidia="true":
     #!/usr/bin/env bash
 
     set -euox pipefail
 
     BUILD_ARGS=()
     LABELS=()
+    # Select the upstream base image independently of our custom image name.
+    if [[ "${target_image}" == *-dx ]]; then
+        BASE_IMAGE="ghcr.io/ublue-os/bluefin-dx"
+    else
+        BASE_IMAGE="ghcr.io/ublue-os/bluefin"
+    fi
+
+    if [[ "${nvidia}" == "true" ]]; then
+        BASE_IMAGE+="-nvidia-open"
+    fi
+
+    BUILD_ARGS+=("--build-arg" "BASE_IMAGE=${BASE_IMAGE}:stable")
+
+    echo "Selected base image: ${BASE_IMAGE}:stable"
+
     if [[ -z "$(git status -s)" ]]; then
         GIT_SHA=$(git rev-parse --short HEAD)
         GIT_REVISION=$(git rev-parse HEAD)
