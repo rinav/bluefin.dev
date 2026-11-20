@@ -8,7 +8,7 @@ COPY --from=yq /usr/bin/yq /yq
 COPY custom/upstream/build_files/build.sh /build.sh
 COPY custom/scripts /scripts
 COPY custom/config /config
-COPY system_files /system_files
+COPY custom/system_files /system_files
 
 
 # Base Image
