@@ -1,0 +1,5 @@
+.groups
+| to_entries[]
+| select(.value.enabled == true)
+| select(strenv(REGISTRY_GROUP) == "" or .key == strenv(REGISTRY_GROUP))
+| .value.packages[]

@@ -1,7 +1,15 @@
-# Allow build scripts to be referenced without being copied into the final image
+# Build-time configuration parser
+FROM docker.io/mikefarah/yq:4.54.1 AS yq
+
+# Build context
 FROM scratch AS ctx
-COPY build_files /
-COPY system_files /system_files
+COPY --from=yq /usr/bin/yq /yq
+
+COPY custom/upstream/build_files/build.sh /build.sh
+COPY custom/scripts /scripts
+COPY custom/config /config
+COPY custom/system_files /system_files
+
 
 # Base Image
 # FROM ghcr.io/ublue-os/bazzite:stable
